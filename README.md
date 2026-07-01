@@ -1,5 +1,7 @@
 first git test
 modified
 again
-new
+new2
+modifed from outside
+
 This is from local.
