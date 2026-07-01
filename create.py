@@ -1,234 +1,473 @@
 import os
 
-files = {}
+os.makedirs("static/js", exist_ok=True)
+os.makedirs("artifacts", exist_ok=True)
 
-files["app/routers/write_photo.py"] = """from fastapi import APIRouter
-from pydantic import BaseModel
-import requests
+open("static/js/task_write_photo.js", "w").write("""window.DET_TASKS = window.DET_TASKS || {};
 
-from app import database, gemini_client, question_bank
+window.DET_TASKS["write_photo"] = {
+  title: "Write About the Photo",
+  init: function (containerEl) {
+    containerEl.innerHTML = `
+      <div class="task-header">
+        <h2>Write About the Photo</h2>
+        <p>Look at the photo and write one or two sentences describing it.</p>
+      </div>
+      <div id="wp-body">
+        <p>Loading prompt...</p>
+      </div>
+    `;
 
-router = APIRouter(prefix="/write-photo", tags=["write-photo"])
+    const body = containerEl.querySelector("#wp-body");
+    let currentPrompt = null;
 
-WRITE_PHOTO_INSTRUCTION = (
-    "You are an expert Duolingo English Test (DET) rater grading a 'Write About the Photo' "
-    "response. The test-taker was shown an image and asked to describe it in a sentence or two. "
-    "Evaluate their written description for how accurately and descriptively it captures the "
-    "image, plus grammar, vocabulary, and sentence structure. Return ONLY a JSON object with "
-    "exactly two keys: score_estimate (an integer from 10 to 160 on the DET overall-score scale) "
-    "and tips (an array of exactly 3 short actionable strings to help the test-taker improve)."
-)
+    DETApi.get("/write-photo/prompt")
+      .then((prompt) => {
+        currentPrompt = prompt;
+        renderPrompt();
+      })
+      .catch(() => {
+        body.innerHTML = `<p>Could not load a prompt. Please try again later.</p>`;
+      });
 
+    function renderPrompt() {
+      body.innerHTML = `
+        <div class="prompt-panel">
+          <img src="${currentPrompt.image_url}" alt="Photo prompt" />
+          <p>${currentPrompt.instruction}</p>
+        </div>
+        <textarea class="field" id="wp-description" rows="5" placeholder="Describe the photo..."></textarea>
+        <div>
+          <button class="btn btn-primary" id="wp-submit">Submit</button>
+          <button class="btn btn-secondary" id="wp-reset">Reset</button>
+        </div>
+        <div id="wp-feedback"></div>
+      `;
 
-class WritePhotoSubmit(BaseModel):
-    prompt_id: int
-    image_url: str
-    description: str
+      const textarea = body.querySelector("#wp-description");
+      const submitBtn = body.querySelector("#wp-submit");
+      const resetBtn = body.querySelector("#wp-reset");
+      const feedbackEl = body.querySelector("#wp-feedback");
 
+      resetBtn.addEventListener("click", () => {
+        textarea.value = "";
+        feedbackEl.innerHTML = "";
+      });
 
-@router.get("/prompt")
-def get_prompt():
-    return question_bank.get_photo_prompt()
+      submitBtn.addEventListener("click", () => {
+        const description = textarea.value.trim();
+        if (!description) {
+          return;
+        }
+        submitBtn.disabled = true;
+        resetBtn.disabled = true;
+        feedbackEl.innerHTML = `<span class="spinner"></span> Scoring your response...`;
 
-
-@router.post("/submit")
-def submit(body: WritePhotoSubmit):
-    image_bytes = None
-    image_mime_type = None
-    try:
-        resp = requests.get(body.image_url, timeout=10)
-        resp.raise_for_status()
-        image_bytes = resp.content
-        image_mime_type = resp.headers.get("Content-Type", "image/jpeg")
-    except Exception:
-        image_bytes = None
-        image_mime_type = None
-
-    result = gemini_client.score_with_gemini(
-        instruction=WRITE_PHOTO_INSTRUCTION,
-        content_text=body.description,
-        image_bytes=image_bytes,
-        image_mime_type=image_mime_type,
-    )
-
-    detail = dict(result)
-    detail["transcript"] = None
-    detail["prompt_id"] = body.prompt_id
-    database.save_attempt("write_photo", result["score_estimate"] / 160 * 100, detail)
-
-    return {
-        "score_estimate": result["score_estimate"],
-        "tips": result["tips"],
-        "transcript": None,
-    }
-"""
-
-files["app/routers/speaking_practice.py"] = """from fastapi import APIRouter, File, Form, UploadFile
-import random
-
-from app import database, gemini_client, groq_client, question_bank
-
-router = APIRouter(prefix="/speaking-practice", tags=["speaking-practice"])
-
-SPEAKING_PRACTICE_INSTRUCTION = (
-    "You are an expert Duolingo English Test (DET) rater grading a Speaking Practice response. "
-    "The test-taker was given a prompt and asked to speak their answer aloud; you are given the "
-    "transcript of their spoken response. Evaluate fluency, grammar, vocabulary, coherence, and "
-    "how directly the response addresses the prompt. If the transcript is empty or says no speech "
-    "was detected, score accordingly and give tips on making sure audio is recorded clearly. "
-    "Return ONLY a JSON object with exactly two keys: score_estimate (an integer from 10 to 160 on "
-    "the DET overall-score scale) and tips (an array of exactly 3 short actionable strings)."
-)
-
-
-@router.get("/prompt")
-def get_prompt():
-    return random.choice(question_bank.get_speaking_practice_prompts())
-
-
-@router.post("/submit")
-async def submit(audio: UploadFile = File(...), prompt_id: int = Form(...)):
-    audio_bytes = await audio.read()
-    transcript = groq_client.transcribe_audio(audio_bytes, filename=audio.filename or "audio.webm")
-
-    content_text = transcript if transcript else "[No speech was detected in the audio recording.]"
-
-    result = gemini_client.score_with_gemini(
-        instruction=SPEAKING_PRACTICE_INSTRUCTION,
-        content_text=content_text,
-    )
-
-    detail = dict(result)
-    detail["transcript"] = transcript
-    detail["prompt_id"] = prompt_id
-    database.save_attempt("speaking_practice", result["score_estimate"] / 160 * 100, detail)
-
-    return {
-        "score_estimate": result["score_estimate"],
-        "tips": result["tips"],
-        "transcript": transcript,
-    }
-"""
-
-files["app/routers/writing_sample.py"] = """from fastapi import APIRouter
-from pydantic import BaseModel
-import random
-
-from app import database, gemini_client, question_bank
-
-router = APIRouter(prefix="/writing-sample", tags=["writing-sample"])
-
-TIME_LIMIT_SECONDS = 300
-
-WRITING_SAMPLE_INSTRUCTION = (
-    "You are an expert Duolingo English Test (DET) rater grading a Writing Sample response, a "
-    "timed essay written in response to a prompt. Evaluate the essay for grammar, vocabulary, "
-    "coherence, organization, and how well it develops and supports ideas relevant to the prompt. "
-    "Return ONLY a JSON object with exactly two keys: score_estimate (an integer from 10 to 160 on "
-    "the DET overall-score scale) and tips (an array of exactly 3 short actionable strings)."
-)
-
-
-class WritingSampleSubmit(BaseModel):
-    prompt_id: int
-    essay: str
-
-
-@router.get("/prompt")
-def get_prompt():
-    prompt = random.choice(question_bank.get_writing_sample_prompts())
-    return {
-        "id": prompt["id"],
-        "prompt_text": prompt["prompt_text"],
-        "time_limit_seconds": TIME_LIMIT_SECONDS,
+        DETApi.postJson("/write-photo/submit", {
+          prompt_id: currentPrompt.id,
+          image_url: currentPrompt.image_url,
+          description: description,
+        })
+          .then((result) => {
+            renderFeedback(feedbackEl, result);
+          })
+          .catch(() => {
+            feedbackEl.innerHTML = `<p>Something went wrong scoring your response. Please try again.</p>`;
+          })
+          .finally(() => {
+            submitBtn.disabled = false;
+            resetBtn.disabled = false;
+          });
+      });
     }
 
-
-@router.post("/submit")
-def submit(body: WritingSampleSubmit):
-    result = gemini_client.score_with_gemini(
-        instruction=WRITING_SAMPLE_INSTRUCTION,
-        content_text=body.essay,
-    )
-
-    detail = dict(result)
-    detail["transcript"] = None
-    detail["prompt_id"] = body.prompt_id
-    database.save_attempt("writing_sample", result["score_estimate"] / 160 * 100, detail)
-
-    return {
-        "score_estimate": result["score_estimate"],
-        "tips": result["tips"],
-        "transcript": None,
+    function renderFeedback(el, result) {
+      const tipsHtml = result.tips.map((t) => `<li>${t}</li>`).join("");
+      el.innerHTML = `
+        <div class="feedback-banner">
+          <div class="score-badge">${result.score_estimate}<span class="score-scale">/160</span></div>
+          <ul>${tipsHtml}</ul>
+        </div>
+      `;
     }
-"""
+  },
+};
+""")
 
-files["app/routers/speaking_sample.py"] = """from fastapi import APIRouter, File, Form, UploadFile
-import random
+open("static/js/task_speaking_practice.js", "w").write("""window.DET_TASKS = window.DET_TASKS || {};
 
-from app import database, gemini_client, groq_client, question_bank
+window.DET_TASKS["speaking_practice"] = {
+  title: "Speaking Practice",
+  init: function (containerEl) {
+    containerEl.innerHTML = `
+      <div class="task-header">
+        <h2>Speaking Practice</h2>
+        <p>Read the prompt aloud and record your response.</p>
+      </div>
+      <div id="sp-body">
+        <p>Loading prompt...</p>
+      </div>
+    `;
 
-router = APIRouter(prefix="/speaking-sample", tags=["speaking-sample"])
+    const body = containerEl.querySelector("#sp-body");
+    let currentPrompt = null;
+    let recording = false;
 
-TIME_LIMIT_SECONDS = 90
+    DETApi.get("/speaking-practice/prompt")
+      .then((prompt) => {
+        currentPrompt = prompt;
+        renderPrompt();
+      })
+      .catch(() => {
+        body.innerHTML = `<p>Could not load a prompt. Please try again later.</p>`;
+      });
 
-SPEAKING_SAMPLE_INSTRUCTION = (
-    "You are an expert Duolingo English Test (DET) rater grading a Speaking Sample response, a "
-    "timed recorded response to a prompt. You are given the transcript of the test-taker's spoken "
-    "response. Evaluate fluency, grammar, vocabulary, coherence, and how directly the response "
-    "addresses the prompt. If the transcript is empty or says no speech was detected, score "
-    "accordingly and give tips on making sure audio is recorded clearly. Return ONLY a JSON object "
-    "with exactly two keys: score_estimate (an integer from 10 to 160 on the DET overall-score "
-    "scale) and tips (an array of exactly 3 short actionable strings)."
-)
+    function renderPrompt() {
+      body.innerHTML = `
+        <div class="prompt-panel">
+          <p>${currentPrompt.prompt_text}</p>
+        </div>
+        <div>
+          <button class="btn btn-primary" id="sp-record">Start Recording</button>
+          <button class="btn btn-danger" id="sp-stop" disabled>Stop Recording</button>
+        </div>
+        <div id="sp-status"></div>
+        <div id="sp-feedback"></div>
+      `;
 
+      const recordBtn = body.querySelector("#sp-record");
+      const stopBtn = body.querySelector("#sp-stop");
+      const statusEl = body.querySelector("#sp-status");
+      const feedbackEl = body.querySelector("#sp-feedback");
 
-@router.get("/prompt")
-def get_prompt():
-    prompt = random.choice(question_bank.get_speaking_sample_prompts())
-    return {
-        "id": prompt["id"],
-        "prompt_text": prompt["prompt_text"],
-        "time_limit_seconds": TIME_LIMIT_SECONDS,
+      recordBtn.addEventListener("click", () => {
+        feedbackEl.innerHTML = "";
+        DETRecorder.start()
+          .then(() => {
+            recording = true;
+            recordBtn.disabled = true;
+            stopBtn.disabled = false;
+            statusEl.innerHTML = `<span class="record-indicator"><span class="dot"></span>Recording...</span>`;
+          })
+          .catch(() => {
+            statusEl.innerHTML = `<p>Could not access the microphone. Please check permissions.</p>`;
+          });
+      });
+
+      stopBtn.addEventListener("click", () => {
+        if (!recording) {
+          return;
+        }
+        recording = false;
+        stopBtn.disabled = true;
+        statusEl.innerHTML = `<span class="spinner"></span> Processing your recording...`;
+
+        DETRecorder.stop().then((blob) => {
+          const extension = blob.type.includes("wav") ? "wav" : "webm";
+          const formData = new FormData();
+          formData.append("audio", blob, "audio." + extension);
+          formData.append("prompt_id", currentPrompt.id);
+
+          DETApi.postForm("/speaking-practice/submit", formData)
+            .then((result) => {
+              statusEl.innerHTML = "";
+              recordBtn.disabled = false;
+              renderFeedback(feedbackEl, result);
+            })
+            .catch(() => {
+              statusEl.innerHTML = "";
+              recordBtn.disabled = false;
+              feedbackEl.innerHTML = `<p>Something went wrong scoring your response. Please try again.</p>`;
+            });
+        });
+      });
     }
 
-
-@router.post("/submit")
-async def submit(audio: UploadFile = File(...), prompt_id: int = Form(...)):
-    audio_bytes = await audio.read()
-    transcript = groq_client.transcribe_audio(audio_bytes, filename=audio.filename or "audio.webm")
-
-    content_text = transcript if transcript else "[No speech was detected in the audio recording.]"
-
-    result = gemini_client.score_with_gemini(
-        instruction=SPEAKING_SAMPLE_INSTRUCTION,
-        content_text=content_text,
-    )
-
-    detail = dict(result)
-    detail["transcript"] = transcript
-    detail["prompt_id"] = prompt_id
-    database.save_attempt("speaking_sample", result["score_estimate"] / 160 * 100, detail)
-
-    return {
-        "score_estimate": result["score_estimate"],
-        "tips": result["tips"],
-        "transcript": transcript,
+    function renderFeedback(el, result) {
+      const tipsHtml = result.tips.map((t) => `<li>${t}</li>`).join("");
+      const transcriptHtml = result.transcript
+        ? `<div class="transcript-box">${result.transcript}</div>`
+        : `<div class="transcript-box">No speech detected.</div>`;
+      el.innerHTML = `
+        ${transcriptHtml}
+        <div class="feedback-banner">
+          <div class="score-badge">${result.score_estimate}<span class="score-scale">/160</span></div>
+          <ul>${tipsHtml}</ul>
+        </div>
+      `;
     }
-"""
+  },
+};
+""")
 
-files["artifacts/handoff_3.md"] = """session: 3
-files_produced: app/routers/write_photo.py, app/routers/speaking_practice.py, app/routers/writing_sample.py, app/routers/speaking_sample.py
-"""
+open("static/js/task_writing_sample.js", "w").write("""window.DET_TASKS = window.DET_TASKS || {};
 
-files["artifacts/next.md"] = """session: 4
-files: static/index.html, static/css/style.css, static/js/api.js, static/js/recorder.js, static/js/tts.js, static/js/app.js
-handoff_out: artifacts/handoff_4.md
-is_last: false
-read_handoffs: artifacts/handoff_1.md, artifacts/handoff_2.md, artifacts/handoff_3.md
-"""
+window.DET_TASKS["writing_sample"] = {
+  title: "Writing Sample",
+  init: function (containerEl) {
+    containerEl.innerHTML = `
+      <div class="task-header">
+        <h2>Writing Sample</h2>
+        <p>Write a well-developed response before the timer runs out.</p>
+      </div>
+      <div id="ws-body">
+        <p>Loading prompt...</p>
+      </div>
+    `;
 
-for path, content in files.items():
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content)
+    const body = containerEl.querySelector("#ws-body");
+    let currentPrompt = null;
+    let remainingSeconds = 0;
+    let timerId = null;
+    let submitted = false;
+
+    DETApi.get("/writing-sample/prompt")
+      .then((prompt) => {
+        currentPrompt = prompt;
+        remainingSeconds = prompt.time_limit_seconds;
+        renderPrompt();
+        startTimer();
+      })
+      .catch(() => {
+        body.innerHTML = `<p>Could not load a prompt. Please try again later.</p>`;
+      });
+
+    function renderPrompt() {
+      body.innerHTML = `
+        <div class="prompt-panel">
+          <p>${currentPrompt.prompt_text}</p>
+        </div>
+        <div class="timer-display" id="ws-timer">${formatTime(remainingSeconds)}</div>
+        <textarea class="field" id="ws-essay" rows="10" placeholder="Start writing here..."></textarea>
+        <div>
+          <button class="btn btn-primary" id="ws-submit">Submit</button>
+        </div>
+        <div id="ws-feedback"></div>
+      `;
+
+      body.querySelector("#ws-submit").addEventListener("click", () => submitEssay(false));
+    }
+
+    function formatTime(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return minutes + ":" + String(seconds).padStart(2, "0");
+    }
+
+    function startTimer() {
+      const timerEl = body.querySelector("#ws-timer");
+      timerId = setInterval(() => {
+        remainingSeconds -= 1;
+        if (remainingSeconds <= 0) {
+          remainingSeconds = 0;
+          timerEl.textContent = formatTime(0);
+          clearInterval(timerId);
+          submitEssay(true);
+          return;
+        }
+        timerEl.textContent = formatTime(remainingSeconds);
+        if (remainingSeconds <= 30) {
+          timerEl.classList.add("is-low");
+        }
+      }, 1000);
+    }
+
+    function submitEssay(auto) {
+      if (submitted) {
+        return;
+      }
+      submitted = true;
+      if (timerId) {
+        clearInterval(timerId);
+      }
+
+      const textarea = body.querySelector("#ws-essay");
+      const submitBtn = body.querySelector("#ws-submit");
+      const feedbackEl = body.querySelector("#ws-feedback");
+      const essay = textarea.value.trim();
+
+      submitBtn.disabled = true;
+      textarea.disabled = true;
+      feedbackEl.innerHTML = `<span class="spinner"></span> Scoring your essay...`;
+
+      DETApi.postJson("/writing-sample/submit", {
+        prompt_id: currentPrompt.id,
+        essay: essay,
+      })
+        .then((result) => {
+          renderFeedback(feedbackEl, result, auto);
+        })
+        .catch(() => {
+          feedbackEl.innerHTML = `<p>Something went wrong scoring your response. Please try again.</p>`;
+        });
+    }
+
+    function renderFeedback(el, result, auto) {
+      const tipsHtml = result.tips.map((t) => `<li>${t}</li>`).join("");
+      const autoNote = auto ? `<p>Time's up! Your essay was submitted automatically.</p>` : "";
+      el.innerHTML = `
+        ${autoNote}
+        <div class="feedback-banner">
+          <div class="score-badge">${result.score_estimate}<span class="score-scale">/160</span></div>
+          <ul>${tipsHtml}</ul>
+        </div>
+      `;
+    }
+  },
+};
+""")
+
+open("static/js/task_speaking_sample.js", "w").write("""window.DET_TASKS = window.DET_TASKS || {};
+
+window.DET_TASKS["speaking_sample"] = {
+  title: "Speaking Sample",
+  init: function (containerEl) {
+    containerEl.innerHTML = `
+      <div class="task-header">
+        <h2>Speaking Sample</h2>
+        <p>Record a spoken response before the timer runs out.</p>
+      </div>
+      <div id="ss-body">
+        <p>Loading prompt...</p>
+      </div>
+    `;
+
+    const body = containerEl.querySelector("#ss-body");
+    let currentPrompt = null;
+    let remainingSeconds = 0;
+    let timerId = null;
+    let recording = false;
+    let finished = false;
+
+    DETApi.get("/speaking-sample/prompt")
+      .then((prompt) => {
+        currentPrompt = prompt;
+        remainingSeconds = prompt.time_limit_seconds;
+        renderPrompt();
+      })
+      .catch(() => {
+        body.innerHTML = `<p>Could not load a prompt. Please try again later.</p>`;
+      });
+
+    function renderPrompt() {
+      body.innerHTML = `
+        <div class="prompt-panel">
+          <p>${currentPrompt.prompt_text}</p>
+        </div>
+        <div class="timer-display" id="ss-timer">${formatTime(remainingSeconds)}</div>
+        <div>
+          <button class="btn btn-primary" id="ss-record">Start Recording</button>
+          <button class="btn btn-danger" id="ss-stop" disabled>Stop Recording</button>
+        </div>
+        <div id="ss-status"></div>
+        <div id="ss-feedback"></div>
+      `;
+
+      body.querySelector("#ss-record").addEventListener("click", beginRecording);
+      body.querySelector("#ss-stop").addEventListener("click", () => finishRecording(false));
+    }
+
+    function formatTime(totalSeconds) {
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return minutes + ":" + String(seconds).padStart(2, "0");
+    }
+
+    function beginRecording() {
+      const recordBtn = body.querySelector("#ss-record");
+      const stopBtn = body.querySelector("#ss-stop");
+      const statusEl = body.querySelector("#ss-status");
+
+      DETRecorder.start()
+        .then(() => {
+          recording = true;
+          recordBtn.disabled = true;
+          stopBtn.disabled = false;
+          statusEl.innerHTML = `<span class="record-indicator"><span class="dot"></span>Recording...</span>`;
+          startTimer();
+        })
+        .catch(() => {
+          statusEl.innerHTML = `<p>Could not access the microphone. Please check permissions.</p>`;
+        });
+    }
+
+    function startTimer() {
+      const timerEl = body.querySelector("#ss-timer");
+      timerId = setInterval(() => {
+        remainingSeconds -= 1;
+        if (remainingSeconds <= 0) {
+          remainingSeconds = 0;
+          timerEl.textContent = formatTime(0);
+          clearInterval(timerId);
+          finishRecording(true);
+          return;
+        }
+        timerEl.textContent = formatTime(remainingSeconds);
+        if (remainingSeconds <= 30) {
+          timerEl.classList.add("is-low");
+        }
+      }, 1000);
+    }
+
+    function finishRecording(auto) {
+      if (finished || !recording) {
+        return;
+      }
+      finished = true;
+      recording = false;
+      if (timerId) {
+        clearInterval(timerId);
+      }
+
+      const stopBtn = body.querySelector("#ss-stop");
+      const statusEl = body.querySelector("#ss-status");
+      const feedbackEl = body.querySelector("#ss-feedback");
+
+      stopBtn.disabled = true;
+      statusEl.innerHTML = `<span class="spinner"></span> Processing your recording...`;
+
+      DETRecorder.stop().then((blob) => {
+        const extension = blob.type.includes("wav") ? "wav" : "webm";
+        const formData = new FormData();
+        formData.append("audio", blob, "audio." + extension);
+        formData.append("prompt_id", currentPrompt.id);
+
+        DETApi.postForm("/speaking-sample/submit", formData)
+          .then((result) => {
+            statusEl.innerHTML = auto ? `<p>Time's up! Your response was submitted automatically.</p>` : "";
+            renderFeedback(feedbackEl, result);
+          })
+          .catch(() => {
+            statusEl.innerHTML = "";
+            feedbackEl.innerHTML = `<p>Something went wrong scoring your response. Please try again.</p>`;
+          });
+      });
+    }
+
+    function renderFeedback(el, result) {
+      const tipsHtml = result.tips.map((t) => `<li>${t}</li>`).join("");
+      const transcriptHtml = result.transcript
+        ? `<div class="transcript-box">${result.transcript}</div>`
+        : `<div class="transcript-box">No speech detected.</div>`;
+      el.innerHTML = `
+        ${transcriptHtml}
+        <div class="feedback-banner">
+          <div class="score-badge">${result.score_estimate}<span class="score-scale">/160</span></div>
+          <ul>${tipsHtml}</ul>
+        </div>
+      `;
+    }
+  },
+};
+""")
+
+open("artifacts/handoff_6.md", "w").write("""session: 6
+files_produced: static/js/task_write_photo.js, static/js/task_speaking_practice.js, static/js/task_writing_sample.js, static/js/task_speaking_sample.js
+""")
+
+open("artifacts/next.md", "w").write("""session: 7
+files: app/main.py, Dockerfile, docker-compose.yml, .env.example
+handoff_out: artifacts/handoff_7.md
+is_last: true
+read_handoffs: artifacts/handoff_1.md, artifacts/handoff_2.md, artifacts/handoff_3.md, artifacts/handoff_4.md, artifacts/handoff_5.md, artifacts/handoff_6.md
+""")

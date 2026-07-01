@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DET Practice Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div id="app">
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">DET</span>
+      <div class="brand-text">
+        <h1>Practice Studio</h1>
+        <p>Eight tasks, one calm place to rehearse the Duolingo English Test.</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-view">
+    <section id="dashboard-view" class="dashboard-view">
+      <div id="stats-strip" class="stats-strip" aria-live="polite"></div>
+      <div id="task-grid" class="task-grid" aria-label="Practice tasks"></div>
+    </section>
+
+    <section id="task-view" class="task-view" hidden>
+      <button id="back-button" class="back-button" type="button">
+        <span aria-hidden="true">&larr;</span> Back to dashboard
+      </button>
+      <div id="task-container" class="task-container"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Practice runs locally in your browser. Scores are estimates, not official DET results.</p>
+  </footer>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/recorder.js"></script>
+<script src="js/tts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
