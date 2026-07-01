@@ -1,0 +1,141 @@
+{
+  "read_select_words": [
+    {"id": 1, "word": "wisdom", "is_real": true},
+    {"id": 2, "word": "flanterness", "is_real": false},
+    {"id": 3, "word": "gratitude", "is_real": true},
+    {"id": 4, "word": "cluvipation", "is_real": false},
+    {"id": 5, "word": "tranquil", "is_real": true},
+    {"id": 6, "word": "bristonym", "is_real": false},
+    {"id": 7, "word": "harvest", "is_real": true},
+    {"id": 8, "word": "dravelight", "is_real": false},
+    {"id": 9, "word": "glisten", "is_real": true},
+    {"id": 10, "word": "somberack", "is_real": false},
+    {"id": 11, "word": "authentic", "is_real": true},
+    {"id": 12, "word": "plenitrude", "is_real": false},
+    {"id": 13, "word": "nostalgia", "is_real": true},
+    {"id": 14, "word": "varnicular", "is_real": false},
+    {"id": 15, "word": "paradox", "is_real": true},
+    {"id": 16, "word": "threnovate", "is_real": false},
+    {"id": 17, "word": "resilient", "is_real": true},
+    {"id": 18, "word": "glomberish", "is_real": false},
+    {"id": 19, "word": "meadow", "is_real": true},
+    {"id": 20, "word": "fantiloquy", "is_real": false}
+  ],
+  "read_complete_items": [
+    {"id": 1, "text_with_blanks": "The museum's new exhibit features ___ from ancient civilizations that were recently discovered by archaeologists.", "blanks": ["artifacts"]},
+    {"id": 2, "text_with_blanks": "Despite the heavy rain, the students decided to ___ their outdoor field trip rather than cancel it.", "blanks": ["continue"]},
+    {"id": 3, "text_with_blanks": "She spent the entire weekend ___ her research paper before the ___ deadline arrived.", "blanks": ["revising", "final"]},
+    {"id": 4, "text_with_blanks": "The company announced that it would ___ its operations to three new countries by the end of next year.", "blanks": ["expand"]},
+    {"id": 5, "text_with_blanks": "Although he was ___ about the results, the scientist remained ___ and continued testing his hypothesis.", "blanks": ["uncertain", "determined"]},
+    {"id": 6, "text_with_blanks": "The chef carefully ___ the sauce to ensure it had the perfect balance of flavors.", "blanks": ["seasoned"]},
+    {"id": 7, "text_with_blanks": "Local volunteers gathered to ___ the park and plant new trees along the riverbank.", "blanks": ["clean"]},
+    {"id": 8, "text_with_blanks": "The professor encouraged students to ___ their assumptions and support every claim with ___ evidence.", "blanks": ["question", "credible"]}
+  ],
+  "reading_passages": [
+    {
+      "id": 1,
+      "title": "The Rise of Urban Beekeeping",
+      "text": "Over the past two decades, a growing number of city dwellers have taken up beekeeping on rooftops, balconies, and small community gardens. What was once considered a rural practice has become a common sight in cities such as New York, London, and Tokyo. Urban beekeepers argue that their hives help pollinate local plants, support biodiversity, and produce honey with distinctive flavors shaped by the surrounding flora. City governments have responded in different ways: some have relaxed zoning rules to encourage the hobby, while others have imposed strict regulations due to concerns about public safety and allergic reactions. Researchers remain divided on the overall impact of urban hives. Some studies suggest that a high density of honeybee colonies in a small area can create competition for limited flowers, potentially harming wild bee populations that already face pressure from habitat loss. Despite this debate, interest in urban beekeeping continues to grow, driven partly by rising public awareness of pollinator decline and partly by a desire among city residents to reconnect with nature.",
+      "questions": [
+        {"qid": 1, "question": "What is one benefit that urban beekeepers claim their hives provide?", "options": ["They reduce noise pollution in cities.", "They help pollinate local plants and support biodiversity.", "They lower the cost of city electricity.", "They eliminate the need for public parks."], "correct_index": 1},
+        {"qid": 2, "question": "According to the passage, how have city governments responded to urban beekeeping?", "options": ["All cities have banned it outright.", "Responses have varied, from relaxed rules to strict regulations.", "Governments have ignored the practice entirely.", "Only rural governments have addressed it."], "correct_index": 1},
+        {"qid": 3, "question": "What concern do some researchers raise about urban beekeeping?", "options": ["It could lead to a shortage of honey.", "It might increase competition for flowers and harm wild bees.", "It causes damage to rooftop structures.", "It reduces the flavor quality of honey."], "correct_index": 1}
+      ]
+    },
+    {
+      "id": 2,
+      "title": "The Shift Toward Remote Internships",
+      "text": "In recent years, many companies have begun offering remote internships, allowing students to gain professional experience without relocating. Supporters of this shift point out that remote internships widen access for students who cannot afford to move to expensive cities or who have family obligations that keep them close to home. They also note that virtual programs often allow companies to recruit talent from a broader geographic pool, rather than limiting opportunities to applicants near their offices. Critics, however, argue that remote internships can make it harder for young professionals to build the informal relationships and mentorship that often develop through in-person interaction. Some interns report feeling isolated when working entirely online, and a few companies have found it more difficult to evaluate remote interns' day-to-day performance. To address these challenges, several organizations have introduced hybrid models that combine occasional in-person meetups with primarily remote work. Early feedback on these hybrid programs has been largely positive, suggesting that a blended approach may become the standard for internship programs in the years ahead.",
+      "questions": [
+        {"qid": 1, "question": "Why do supporters favor remote internships?", "options": ["They guarantee higher pay for interns.", "They widen access for students who cannot relocate.", "They eliminate the need for supervisors.", "They shorten the length of the internship."], "correct_index": 1},
+        {"qid": 2, "question": "What is one criticism of remote internships mentioned in the passage?", "options": ["They cost companies more money.", "They make it harder to build mentorship relationships.", "They require more office space.", "They reduce the number of available internships."], "correct_index": 1},
+        {"qid": 3, "question": "What model have some organizations introduced to address these challenges?", "options": ["A fully in-person model only.", "A hybrid model combining remote work with occasional in-person meetups.", "A model that eliminates internships altogether.", "A model based only on video lectures."], "correct_index": 1}
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Why Some Rivers Change Course Naturally",
+      "text": "Rivers are rarely as fixed as they appear on a map. Over time, many rivers gradually shift their paths through a natural process called channel migration. As water flows around bends, it erodes the outer bank while depositing sediment along the inner bank, slowly reshaping the curve of the river. In some cases, a river can abandon a wide loop entirely, cutting a straighter path and leaving behind a curved lake known as an oxbow. This kind of change happens most often in rivers that flow through flat, sediment-rich land, since the soft ground allows water to carve new channels more easily than rocky terrain would. Flooding can accelerate the process, sometimes altering a river's course within a single season rather than over decades. While channel migration is a natural and ongoing process, human activities such as building dams, straightening channels for agriculture, or constructing levees can disrupt these natural patterns, sometimes leading to unexpected flooding or erosion elsewhere along the river. Scientists who study rivers argue that allowing some rivers room to move naturally can actually reduce long-term flood risk for nearby communities.",
+      "questions": [
+        {"qid": 1, "question": "What is channel migration?", "options": ["A process where fish move between rivers.", "A natural process where a river gradually shifts its path.", "A method used to build dams.", "A type of river pollution."], "correct_index": 1},
+        {"qid": 2, "question": "What is an oxbow, according to the passage?", "options": ["A type of fish found in rivers.", "A curved lake left behind when a river abandons a loop.", "A tool used to measure river depth.", "A dam built to control flooding."], "correct_index": 1},
+        {"qid": 3, "question": "What do scientists suggest about allowing rivers to move naturally?", "options": ["It has no effect on flooding.", "It can reduce long-term flood risk for nearby communities.", "It always increases the risk of drought.", "It only benefits fish populations."], "correct_index": 1}
+      ]
+    }
+  ],
+  "listening_items": [
+    {
+      "id": 1,
+      "script_lines": [
+        {"speaker": "Anna", "text": "Hey, do you know what time the library closes tonight?"},
+        {"speaker": "Ben", "text": "I think it closes at nine, but it might close earlier on Fridays."},
+        {"speaker": "Anna", "text": "That's right, actually. On Fridays it closes at seven."},
+        {"speaker": "Ben", "text": "Then we should probably head over there soon if we want to return these books."},
+        {"speaker": "Anna", "text": "Good idea. Let's leave in the next ten minutes."}
+      ],
+      "questions": [
+        {"qid": 1, "question": "What time does the library close on Fridays?", "options": ["Seven o'clock", "Eight o'clock", "Nine o'clock", "Ten o'clock"], "correct_index": 0},
+        {"qid": 2, "question": "Why do Anna and Ben want to go to the library?", "options": ["To study for an exam", "To return some books", "To meet a friend", "To attend an event"], "correct_index": 1}
+      ]
+    },
+    {
+      "id": 2,
+      "script_lines": [
+        {"speaker": "Maria", "text": "Did you hear that tomorrow's team meeting got moved?"},
+        {"speaker": "Sam", "text": "No, I didn't. What time is it now?"},
+        {"speaker": "Maria", "text": "It's been pushed back from ten in the morning to two in the afternoon."},
+        {"speaker": "Sam", "text": "That works better for me anyway, since I have a dentist appointment in the morning."},
+        {"speaker": "Maria", "text": "Same here. I'll send everyone a reminder before lunch."}
+      ],
+      "questions": [
+        {"qid": 1, "question": "What time was the meeting originally scheduled for?", "options": ["Two in the afternoon", "Ten in the morning", "Nine in the morning", "Noon"], "correct_index": 1},
+        {"qid": 2, "question": "Why is Sam glad about the new meeting time?", "options": ["He prefers afternoon meetings.", "He has a dentist appointment in the morning.", "He is going on vacation.", "He forgot about the meeting."], "correct_index": 1}
+      ]
+    },
+    {
+      "id": 3,
+      "script_lines": [
+        {"speaker": "Waiter", "text": "Welcome in. Are you ready to order, or do you need a few more minutes?"},
+        {"speaker": "Customer", "text": "I think I'm ready. Could I get the vegetable soup and a small salad?"},
+        {"speaker": "Waiter", "text": "Of course. Would you like anything to drink with that?"},
+        {"speaker": "Customer", "text": "Just water, please, but could you bring it without ice?"},
+        {"speaker": "Waiter", "text": "No problem at all. I'll have that out for you shortly."}
+      ],
+      "questions": [
+        {"qid": 1, "question": "What does the customer order to eat?", "options": ["A sandwich and fries", "Vegetable soup and a small salad", "Pizza and salad", "Soup and bread"], "correct_index": 1},
+        {"qid": 2, "question": "How does the customer want their water served?", "options": ["With extra ice", "Without ice", "With lemon", "Sparkling"], "correct_index": 1}
+      ]
+    }
+  ],
+  "photo_prompts": [
+    {"id": 1, "image_url": "https://picsum.photos/id/1015/800/600", "instruction": "Look at the photo above. Write one or more sentences describing what you see. Try to include as much detail as possible."},
+    {"id": 2, "image_url": "https://picsum.photos/id/1024/800/600", "instruction": "Write a description of the photo above. Mention the people, objects, or setting you notice."},
+    {"id": 3, "image_url": "https://picsum.photos/id/1035/800/600", "instruction": "Describe the scene shown in the photo above using one or more complete sentences."},
+    {"id": 4, "image_url": "https://picsum.photos/id/1043/800/600", "instruction": "Look at the image above and write a short description of what is happening in it."},
+    {"id": 5, "image_url": "https://picsum.photos/id/1050/800/600", "instruction": "Write one or more sentences describing the photo above in as much detail as you can."}
+  ],
+  "speaking_practice_prompts": [
+    {"id": 1, "prompt_text": "Describe a skill you would like to learn in the future and explain why it interests you."},
+    {"id": 2, "prompt_text": "Talk about a memorable trip you have taken. Describe where you went and what made it memorable."},
+    {"id": 3, "prompt_text": "Describe your favorite way to relax after a long day and explain why it helps you."},
+    {"id": 4, "prompt_text": "Talk about a person who has influenced your life in a positive way and explain how."},
+    {"id": 5, "prompt_text": "Describe a challenge you have faced and how you dealt with it."},
+    {"id": 6, "prompt_text": "Talk about your favorite season of the year and explain what you like about it."},
+    {"id": 7, "prompt_text": "Describe a book, movie, or show that made a strong impression on you."},
+    {"id": 8, "prompt_text": "Talk about a goal you are currently working toward and the steps you are taking to reach it."}
+  ],
+  "writing_sample_prompts": [
+    {"id": 1, "prompt_text": "Some people prefer to work for a large company, while others prefer to work for a small company. Discuss the advantages of each and explain which you would prefer."},
+    {"id": 2, "prompt_text": "Do you agree or disagree with the following statement: Technology has made people less social. Use specific reasons and examples to support your answer."},
+    {"id": 3, "prompt_text": "Describe a change you would like to see in your local community and explain why it matters."},
+    {"id": 4, "prompt_text": "Some people believe that students should be required to study a foreign language, while others believe it should be optional. Discuss both views and give your opinion."},
+    {"id": 5, "prompt_text": "Explain the qualities you believe make someone a good leader, using examples to support your ideas."}
+  ],
+  "speaking_sample_prompts": [
+    {"id": 1, "prompt_text": "Talk about a piece of advice someone gave you that you still remember. Explain why it was meaningful."},
+    {"id": 2, "prompt_text": "Describe your ideal living environment and explain what makes it appealing to you."},
+    {"id": 3, "prompt_text": "Talk about how technology has changed the way you communicate with friends and family."},
+    {"id": 4, "prompt_text": "Describe a tradition from your culture that you find meaningful and explain why."},
+    {"id": 5, "prompt_text": "Talk about a time when you had to make a difficult decision and how you approached it."}
+  ]
+}
